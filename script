@@ -1,0 +1,189 @@
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score");
+
+let score = 0;
+let level = 1;
+let gameRunning = false;
+
+const frogImg = new Image();
+frogImg.src = "assets/frog.png";
+
+const carImg = new Image();
+carImg.src = "assets/car.png";
+
+const logImg = new Image();
+logImg.src = "assets/log.png";
+
+const jumpSound = new Audio("assets/jump.wav");
+const crashSound = new Audio("assets/crash.wav");
+const winSound = new Audio("assets/win.wav");
+
+const frog = { x: 180, y: 460, width: 40, height: 40 };
+const cars = [];
+const logs = [];
+const powerUps = [];
+
+function initCars() {
+  cars.length = 0;
+  for (let i = 0; i < 3; i++) {
+    cars.push({ x: i * 150, y: 300, width: 60, height: 40, speed: 2 + level });
+  }
+}
+
+function initLogs() {
+  logs.length = 0;
+  for (let i = 0; i < 3; i++) {
+    logs.push({ x: i * 130, y: 150, width: 80, height: 40, speed: 1.5 + level });
+  }
+}
+
+function initPowerUps() {
+  powerUps.length = 0;
+  if (Math.random() < 0.5) {
+    powerUps.push({ x: Math.random() * 360, y: 220, width: 30, height: 30, active: true });
+  }
+}
+
+function drawFrog() {
+  ctx.drawImage(frogImg, frog.x, frog.y, frog.width, frog.height);
+}
+
+function drawCars() {
+  cars.forEach(car => {
+    ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
+    car.x += car.speed;
+    if (car.x > canvas.width) car.x = -car.width;
+  });
+}
+
+function drawLogs() {
+  logs.forEach(log => {
+    ctx.drawImage(logImg, log.x, log.y, log.width, log.height);
+    log.x -= log.speed;
+    if (log.x + log.width < 0) log.x = canvas.width;
+  });
+}
+
+function drawPowerUps() {
+  ctx.fillStyle = "purple";
+  powerUps.forEach(p => {
+    if (p.active) ctx.fillRect(p.x, p.y, p.width, p.height);
+  });
+}
+
+function drawGoal() {
+  ctx.fillStyle = "gold";
+  ctx.fillRect(0, 0, canvas.width, 40);
+}
+
+function drawRiver() {
+  ctx.fillStyle = "#1E90FF";
+  ctx.fillRect(0, 100, canvas.width, 100);
+}
+
+function checkCollision() {
+  cars.forEach(car => {
+    if (isColliding(frog, car)) {
+      crashSound.play();
+      endGame("💥 Zderzenie z autem!");
+    }
+  });
+
+  if (frog.y < 200 && frog.y > 100) {
+    let onLog = false;
+    logs.forEach(log => {
+      if (isColliding(frog, log)) onLog = true;
+    });
+    if (!onLog) {
+      crashSound.play();
+      endGame("🌊 Żaba wpadła do rzeki!");
+    }
+  }
+
+  powerUps.forEach(p => {
+    if (p.active && isColliding(frog, p)) {
+      p.active = false;
+      score += 5;
+      scoreDisplay.textContent = `Punkty: ${score}`;
+    }
+  });
+
+  if (frog.y < 40) {
+    winSound.play();
+    score += 10;
+    level += 1;
+    scoreDisplay.textContent = `Punkty: ${score}`;
+    frog.y = 460;
+    initCars();
+    initLogs();
+    initPowerUps();
+    alert(`🎉 Poziom ${level}!`);
+  }
+}
+
+function isColliding(a, b) {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+function gameLoop() {
+  if (!gameRunning) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGoal();
+  drawRiver();
+  drawLogs();
+  drawCars();
+  drawPowerUps();
+  drawFrog();
+  checkCollision();
+  requestAnimationFrame(gameLoop);
+}
+
+function move(dir) {
+  const step = 20;
+  if (dir === "up") frog.y -= step;
+  if (dir === "down") frog.y += step;
+  if (dir === "left") frog.x -= step;
+  if (dir === "right") frog.x += step;
+  jumpSound.play();
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp") move("up");
+  if (e.key === "ArrowDown") move("down");
+  if (e.key === "ArrowLeft") move("left");
+  if (e.key === "ArrowRight") move("right");
+});
+
+function startGame() {
+  const selectedDifficulty = parseInt(document.getElementById("difficulty").value);
+  level = selectedDifficulty;
+  score = 0;
+  scoreDisplay.textContent = `Punkty: ${score}`;
+  document.getElementById("startScreen").style.display = "none";
+  canvas.style.display = "block";
+  scoreDisplay.style.display = "block";
+  document.getElementById("controls").style.display = "block";
+  gameRunning = true;
+  initCars();
+  initLogs();
+  initPowerUps();
+  gameLoop();
+}
+
+function endGame(message) {
+  alert(message);
+  gameRunning = false;
+  document.getElementById("endScreen").style.display = "block";
+  document.getElementById("finalScore").textContent = `Twój wynik: ${score}`;
+}
+
+function restartGame() {
+  document.getElementById("endScreen").style.display = "none";
+  document.getElementById("startScreen").style.display = "block";
+}
