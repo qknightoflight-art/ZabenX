@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>ŻabenX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🐸 ŻabenX</h1>
+
+  <div id="startScreen">
+    <h2>Witaj w ŻabenX!</h2>
+    <p>Wybierz poziom trudności:</p>
+    <select id="difficulty">
+      <option value="1">Łatwy</option>
+      <option value="2">Średni</option>
+      <option value="3">Trudny</option>
+    </select>
+    <br><br>
+    <button onclick="startGame()">▶️ Start</button>
+  </div>
+
+  <canvas id="gameCanvas" width="400" height="500" style="display:none;"></canvas>
+  <p id="score" style="display:none;">Punkty: 0</p>
+
+  <div id="controls" style="display:none;">
+    <button onclick="move('up')">⬆️</button><br>
+    <button onclick="move('left')">⬅️</button>
+    <button onclick="move('down')">⬇️</button>
+    <button onclick="move('right')">➡️</button>
+  </div>
+
+  <div id="endScreen" style="display:none;">
+    <h2>Koniec gry!</h2>
+    <p id="finalScore"></p>
+    <button onclick="restartGame()">🔄 Zagraj ponownie</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
